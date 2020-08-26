@@ -12,6 +12,10 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "bs-platform": "^8.2.0"
+    "bs-platform": "^8.2.0",
+    "cssnano": "^4.1.10"
+  },
+  "dependencies": {
+    "bs-webapi": "^0.19.1"
   }
 }

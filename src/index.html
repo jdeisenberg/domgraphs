@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>DOM Graphs</title>
+    <style type="text/css">
+      #canvas {
+        width: 450px;
+        float: left;
+        border: 1px solid black;
+        margin: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>DOM Graphs</h1>
+    <canvas id="canvas" width="400" height="400">
+      Your browser does not support the &lt;canvas&gt; element :(
+    </canvas>
+    <div>
+      <p><input type="text" size="3" id="factor1"/>
+      <select id="fcn1">
+        <option value="sin">sin</option>
+        <option value="cos">cos</option>
+      </select>
+      (
+        <input type="text" size="3" id="theta1"/>
+        &theta; +
+        <input type="text" size="3" id="offset1"/>&deg;
+      )</p>
+
+      <p><input type="text" size="3" id="factor2"/>
+      <select id="fcn2">
+        <option value="sin">sin</option>
+        <option value="cos">cos</option>
+      </select>
+      (
+        <input type="text" size="3" id="theta2"/>
+        &theta; +
+        <input type="text" size="3" id="offset2"/>&deg;
+      )</p>
+
+      <p>
+        Type of graph:
+        <input type="radio" value="polar" name="graphType" id="polar"/>
+          <label for="polar">Polar</label>
+        <input type="radio" value="polar" name="graphType" id="lissajous"/>
+          <label for="lissajous">Lissajous</label>
+      </p>
+
+      <p><button id="draw" value="draw">Draw</button></p>
+    </div>
+    <script type="text/javascript" src="DomGraphs.bs.js"></script>
+  </body>
+</html>

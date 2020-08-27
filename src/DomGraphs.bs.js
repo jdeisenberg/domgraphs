@@ -2,6 +2,7 @@
 'use strict';
 
 var Curry = require("bs-platform/lib/js/curry.js");
+var Caml_array = require("bs-platform/lib/js/caml_array.js");
 var Caml_format = require("bs-platform/lib/js/caml_format.js");
 var Caml_option = require("bs-platform/lib/js/caml_option.js");
 var Caml_js_exceptions = require("bs-platform/lib/js/caml_js_exceptions.js");
@@ -27,66 +28,180 @@ var userInfo = {
   ]
 };
 
-function getInputValue(id, defaultValue, f) {
+function getInputValue(id, $$default, f) {
   var element = document.getElementById(id);
   if (element == null) {
     return {
             TAG: /* Error */1,
             _0: "No element" + id
           };
-  } else {
-    return Curry._1(f, element.value);
-  }
-}
-
-function getNumericValue(id, defaultValue) {
-  var element = document.getElementById(id);
-  if (element == null) {
-    return {
-            TAG: /* Error */1,
-            _0: "No element " + id
-          };
   }
   var s = element.value;
-  if (s === "") {
-    return {
-            TAG: /* Ok */0,
-            _0: defaultValue
-          };
-  }
-  var result;
-  try {
-    result = Caml_format.caml_float_of_string(s);
-  }
-  catch (raw_exn){
-    var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
-    if (exn.RE_EXN_ID === "Failure") {
+  return Curry._2(f, s, $$default);
+}
+
+function getNumericValue(id, $$default) {
+  var converter = function (s, $$default) {
+    console.log("numeric s=|" + s + "|");
+    if (s === "") {
       return {
-              TAG: /* Error */1,
-              _0: s + " is not numeric."
+              TAG: /* Ok */0,
+              _0: $$default
             };
     }
-    throw exn;
+    var result;
+    try {
+      result = Caml_format.caml_float_of_string(s);
+    }
+    catch (raw_exn){
+      var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
+      if (exn.RE_EXN_ID === "Failure") {
+        return {
+                TAG: /* Error */1,
+                _0: s + " is not numeric."
+              };
+      }
+      throw exn;
+    }
+    return {
+            TAG: /* Ok */0,
+            _0: result
+          };
+  };
+  return getInputValue(id, $$default, converter);
+}
+
+function getFunctionValue(id) {
+  var converter = function (s, _default) {
+    if (s === "sin") {
+      return {
+              TAG: /* Ok */0,
+              _0: (function (prim) {
+                  return Math.sin(prim);
+                })
+            };
+    } else if (s === "cos") {
+      return {
+              TAG: /* Ok */0,
+              _0: (function (prim) {
+                  return Math.cos(prim);
+                })
+            };
+    } else {
+      return {
+              TAG: /* Error */1,
+              _0: "Unknown trig function " + s
+            };
+    }
+  };
+  return getInputValue(id, (function (prim) {
+                return Math.sin(prim);
+              }), converter);
+}
+
+function multiMap(rX, rY, f) {
+  if (rX.TAG) {
+    return rX;
+  } else if (rY.TAG) {
+    return {
+            TAG: /* Error */1,
+            _0: rY._0
+          };
+  } else {
+    return {
+            TAG: /* Ok */0,
+            _0: Curry._2(f, rY._0, rX._0)
+          };
   }
-  return {
-          TAG: /* Ok */0,
-          _0: result
-        };
 }
 
 function getFormula(suffix) {
-  getNumericValue("factor" + suffix, 1.0);
-  getNumericValue("theta" + suffix, 1.0);
-  getNumericValue("offset" + suffix, 0.0);
-  return {
-          TAG: /* Error */1,
-          _0: "TBD"
-        };
+  var possibleFormula = {
+    TAG: /* Ok */0,
+    _0: {
+      factor: 1.0,
+      fcn: (function (prim) {
+          return Math.sin(prim);
+        }),
+      theta: 1.0,
+      offset: 0.0
+    }
+  };
+  return multiMap(multiMap(multiMap(multiMap(possibleFormula, getNumericValue("factor" + suffix, 1.0), (function (factor, form) {
+                            return {
+                                    factor: factor,
+                                    fcn: form.fcn,
+                                    theta: form.theta,
+                                    offset: form.offset
+                                  };
+                          })), getFunctionValue("fcn" + suffix), (function (fcn, formula) {
+                        return {
+                                factor: formula.factor,
+                                fcn: fcn,
+                                theta: formula.theta,
+                                offset: formula.offset
+                              };
+                      })), getNumericValue("theta" + suffix, 1.0), (function (theta, formula) {
+                    return {
+                            factor: formula.factor,
+                            fcn: formula.fcn,
+                            theta: theta,
+                            offset: formula.offset
+                          };
+                  })), getNumericValue("offset" + suffix, 0.0), (function (offset, formula) {
+                return {
+                        factor: formula.factor,
+                        fcn: formula.fcn,
+                        theta: formula.theta,
+                        offset: offset
+                      };
+              }));
 }
 
-function draw(evt) {
-  var testNumeric = getNumericValue("factor1", 1.0);
-  console.log(testNumeric);
+function getRadioValue(radioButtons, $$default) {
+  var _index = 0;
+  while(true) {
+    var index = _index;
+    if (index === radioButtons.length) {
+      return $$default;
+    }
+    var element = document.getElementById(Caml_array.caml_array_get(radioButtons, index)[0]);
+    if (element == null) {
+      _index = index + 1 | 0;
+      continue ;
+    }
+    if (element.checked) {
+      return Caml_array.caml_array_get(radioButtons, index)[1];
+    }
+    _index = index + 1 | 0;
+    continue ;
+  };
+}
+
+function draw(_evt) {
+  var formula1 = getFormula("1");
+  var formula2 = getFormula("2");
+  var plotAs = getRadioValue([
+        [
+          "polar",
+          /* Polar */0
+        ],
+        [
+          "lissajous",
+          /* Lissajous */1
+        ]
+      ], /* Polar */0);
+  if (formula1.TAG) {
+    window.alert(formula1._0);
+    return ;
+  }
+  if (formula2.TAG) {
+    window.alert(formula2._0);
+    return ;
+  }
+  console.log("formula 1:", formula1._0);
+  console.log("formula 2:", formula2._0);
+  console.log("plot as: ", plotAs);
   
 }
 
@@ -110,6 +225,8 @@ var InputElem;
 
 var EvtTarget;
 
+var R;
+
 var optButton$1 = (optButton == null) ? undefined : Caml_option.some(optButton);
 
 exports.DOM = DOM;
@@ -118,10 +235,14 @@ exports.Elem = Elem;
 exports.HtmlElem = HtmlElem;
 exports.InputElem = InputElem;
 exports.EvtTarget = EvtTarget;
+exports.R = R;
 exports.userInfo = userInfo;
 exports.getInputValue = getInputValue;
 exports.getNumericValue = getNumericValue;
+exports.getFunctionValue = getFunctionValue;
+exports.multiMap = multiMap;
 exports.getFormula = getFormula;
+exports.getRadioValue = getRadioValue;
 exports.draw = draw;
 exports.optButton = optButton$1;
 /* optButton Not a pure module */

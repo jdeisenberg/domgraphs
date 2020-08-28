@@ -4,7 +4,7 @@ module Elem = Webapi.Dom.Element
 module HtmlElem = Webapi.Dom.HtmlElement
 module InputElem = Webapi.Dom.HtmlInputElement
 module EvtTarget = Webapi.Dom.EventTarget
-module R = Belt.Result
+module Result = Belt.Result
 
 type trigFcn = (float) => float
 
@@ -24,10 +24,10 @@ let userInfo = ref (({factor: 1.0, fcn: sin, theta: 1.0, offset: 0.0},
 
 external unsafeAsHtmlInputElement : Elem.t => InputElem.t = "%identity"
 
-type numResult = Belt.Result.t<float, string>
-type fcnResult = Belt.Result.t<trigFcn, string>
-type formulaResult = Belt.Result.t<formula, string>
-type inputResult<'a> = Belt.Result.t<'a, string>
+type numResult = Result.t<float, string>
+type fcnResult = Result.t<trigFcn, string>
+type formulaResult = Result.t<formula, string>
+type inputResult<'a> = Result.t<'a, string>
 
 let getInputValue = (id: string, default: 'a, f: (string, 'a)=> inputResult<'a>):
   inputResult<'a> => {
@@ -36,7 +36,7 @@ let getInputValue = (id: string, default: 'a, f: (string, 'a)=> inputResult<'a>)
         let s = InputElem.value(unsafeAsHtmlInputElement(element))
         f(s, default)
       }
-    | None => Belt.Result.Error("No element" ++ id)
+    | None => Result.Error("No element" ++ id)
   }
 }
 
@@ -50,14 +50,13 @@ let getInputValue = (id: string, default: 'a, f: (string, 'a)=> inputResult<'a>)
 
 let getNumericValue = (id: string, default: float): numResult => {
   let converter = (s: string, default: float): numResult => {
-    Js.log("numeric s=|"++s ++ "|");
     if (s == "") {
-      Belt.Result.Ok(default)
+      Result.Ok(default)
     } else {
       switch (float_of_string(s)) {
-        | result => Belt.Result.Ok(result)
+        | result => Result.Ok(result)
         | exception Failure(_) =>
-            Belt.Result.Error(s ++ " is not numeric.")
+            Result.Error(s ++ " is not numeric.")
       }
     }
   }
@@ -67,33 +66,33 @@ let getNumericValue = (id: string, default: float): numResult => {
 let getFunctionValue = (id: string): fcnResult => {
   let converter = (s: string, _default: trigFcn): fcnResult => {
     if (s == "sin") {
-      Belt.Result.Ok(sin)
+      Result.Ok(sin)
     } else if (s == "cos") {
-      Belt.Result.Ok(cos)
+      Result.Ok(cos)
     } else {
-      Belt.Result.Error("Unknown trig function " ++ s)
+      Result.Error("Unknown trig function " ++ s)
     }
   }
   getInputValue(id, sin, converter); // include a default to make getInputValue happy
 }
 
 let multiMap = (
-  rX: Belt.Result.t<'a, 'b>, // this will be our formula
-  rY: Belt.Result.t<'c, 'b>, // this is the result of getting an input field
+  rX: Result.t<'a, 'b>, // this will be our formula
+  rY: Result.t<'c, 'b>, // this is the result of getting an input field
   f: ('c, 'a) => 'a):        // function to insert input value ('c) into formula ('a)
-    Belt.Result.t<'a, 'b> => {
+    Result.t<'a, 'b> => {
 
   switch (rX, rY) {
-    | (Belt.Result.Ok(x), Belt.Result.Ok(y)) =>
-        Belt.Result.Ok(f(y, x))
-    | (Belt.Result.Ok(_x), Belt.Result.Error(err)) =>
-        (Belt.Result.Error(err): Belt.Result.t<'a, 'b>)
+    | (Result.Ok(x), Result.Ok(y)) =>
+        Result.Ok(f(y, x))
+    | (Result.Ok(_x), Result.Error(err)) =>
+        (Result.Error(err): Result.t<'a, 'b>)
     | (err, _) => err
   }
 }
 
-let getFormula = (suffix: string): Belt.Result.t<formula, string> => {
-  let possibleFormula = Belt.Result.Ok({ factor: 1.0, fcn: sin, theta: 1.0, offset: 0.0})
+let getFormula = (suffix: string): Result.t<formula, string> => {
+  let possibleFormula = Result.Ok({ factor: 1.0, fcn: sin, theta: 1.0, offset: 0.0})
   
   multiMap(possibleFormula, getNumericValue("factor" ++ suffix, 1.0),
     (factor, form) => {...form, factor: factor}) ->
@@ -126,35 +125,3 @@ let getRadioValue = (radioButtons: array<(string, 'a)>, default: 'a) => {
   helper(0)
 }
 
-let plot = (f1: formula, f2: formula, plotAs: graphType):unit => {
-  switch (Doc.getElementById("canvas", DOM.document)) [
-    | Some(canvasElement) => {
-        ()
-      }
-    | None => ()
-}
-
-let draw = (_evt) => {
-  let formula1 = getFormula("1")
-  let formula2 = getFormula("2")
-  let plotAs = getRadioValue([("polar", Polar), ("lissajous", Lissajous)], Polar)
-  switch (formula1, formula2) {
-    | (Belt.Result.Ok(f1), Belt.Result.Ok(f2)) => {
-        Js.log2("formula 1:", f1)
-        Js.log2("formula 2:", f2)
-        Js.log2("plot as: ", plotAs)
-        plot(f1, f2, plotAs)
-      }
-    | (Belt.Result.Error(e1), _) => DOM.Window.alert(e1, DOM.window)
-    | (_, Belt.Result.Error(e2)) => DOM.Window.alert(e2, DOM.window)
-  }
-  
-}
-
-let optButton = Doc.getElementById("draw", DOM.document)
-switch (optButton) {
-  | Some(button) => {
-      EvtTarget.addClickEventListener(draw, Elem.asEventTarget(button))
-    }
-  | None => DOM.Window.alert("Cannot find button", DOM.window)
-}

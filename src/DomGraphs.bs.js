@@ -4,7 +4,6 @@
 var Curry = require("bs-platform/lib/js/curry.js");
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
 var Caml_format = require("bs-platform/lib/js/caml_format.js");
-var Caml_option = require("bs-platform/lib/js/caml_option.js");
 var Caml_js_exceptions = require("bs-platform/lib/js/caml_js_exceptions.js");
 
 var userInfo = {
@@ -42,7 +41,6 @@ function getInputValue(id, $$default, f) {
 
 function getNumericValue(id, $$default) {
   var converter = function (s, $$default) {
-    console.log("numeric s=|" + s + "|");
     if (s === "") {
       return {
               TAG: /* Ok */0,
@@ -178,41 +176,6 @@ function getRadioValue(radioButtons, $$default) {
   };
 }
 
-function draw(_evt) {
-  var formula1 = getFormula("1");
-  var formula2 = getFormula("2");
-  var plotAs = getRadioValue([
-        [
-          "polar",
-          /* Polar */0
-        ],
-        [
-          "lissajous",
-          /* Lissajous */1
-        ]
-      ], /* Polar */0);
-  if (formula1.TAG) {
-    window.alert(formula1._0);
-    return ;
-  }
-  if (formula2.TAG) {
-    window.alert(formula2._0);
-    return ;
-  }
-  console.log("formula 1:", formula1._0);
-  console.log("formula 2:", formula2._0);
-  console.log("plot as: ", plotAs);
-  
-}
-
-var optButton = document.getElementById("draw");
-
-if (optButton == null) {
-  window.alert("Cannot find button");
-} else {
-  optButton.addEventListener("click", draw);
-}
-
 var DOM;
 
 var Doc;
@@ -225,9 +188,7 @@ var InputElem;
 
 var EvtTarget;
 
-var R;
-
-var optButton$1 = (optButton == null) ? undefined : Caml_option.some(optButton);
+var Result;
 
 exports.DOM = DOM;
 exports.Doc = Doc;
@@ -235,7 +196,7 @@ exports.Elem = Elem;
 exports.HtmlElem = HtmlElem;
 exports.InputElem = InputElem;
 exports.EvtTarget = EvtTarget;
-exports.R = R;
+exports.Result = Result;
 exports.userInfo = userInfo;
 exports.getInputValue = getInputValue;
 exports.getNumericValue = getNumericValue;
@@ -243,6 +204,4 @@ exports.getFunctionValue = getFunctionValue;
 exports.multiMap = multiMap;
 exports.getFormula = getFormula;
 exports.getRadioValue = getRadioValue;
-exports.draw = draw;
-exports.optButton = optButton$1;
-/* optButton Not a pure module */
+/* No side effect */

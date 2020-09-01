@@ -1,8 +1,6 @@
 module DOM = Webapi.Dom
 module Doc = Webapi.Dom.Document
 module Elem = Webapi.Dom.Element
-module Node = Webapi.Dom.Node
-module Evt = Webapi.Dom.Event
 module EvtTarget = Webapi.Dom.EventTarget
 module Canvas = Webapi.Canvas
 module CanvasElement = Webapi.Canvas.CanvasElement
@@ -64,7 +62,7 @@ let plot = (formula1: DomGraphs.formula, formula2: DomGraphs.formula,
         }
                 
         let evaluate = (f: DomGraphs.formula, angle: float): float => {
-          f.factor *. f.fcn(f.theta *. (radians(angle)) +. radians(f.offset))
+          f.factor *. f.fcn(f.theta *. radians(angle) +. radians(f.offset))
         }
         
         let getPolar = (theta): cartesian => {

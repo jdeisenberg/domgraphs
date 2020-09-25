@@ -2,10 +2,11 @@
 'use strict';
 
 var Curry = require("bs-platform/lib/js/curry.js");
+var Belt_Array = require("bs-platform/lib/js/belt_Array.js");
 var Caml_int32 = require("bs-platform/lib/js/caml_int32.js");
 var Caml_option = require("bs-platform/lib/js/caml_option.js");
 var DomGraphs$Domgraphs = require("./DomGraphs.bs.js");
-var Webapi__Canvas__Canvas2d = require("bs-webapi/src/Webapi/Canvas/Webapi__Canvas__Canvas2d.js");
+var Webapi__Canvas__Canvas2d = require("bs-webapi/src/Webapi/Canvas/Webapi__Canvas__Canvas2d.bs.js");
 
 function radians(degrees) {
   return degrees * Math.PI / 180.0;
@@ -82,12 +83,37 @@ function plot(formula1, formula2, plotAs) {
             r2
           ];
   };
-  Webapi__Canvas__Canvas2d.setStrokeStyle(context, /* String */0, "#999");
+  Webapi__Canvas__Canvas2d.setStrokeStyle(context, /* String */0, "#ccc");
   context.beginPath();
-  context.moveTo(0.0, centerY);
-  context.lineTo(width, centerY);
-  context.moveTo(centerX, 0.0);
-  context.lineTo(centerX, height);
+  Belt_Array.forEach([
+        50.0,
+        100.0,
+        150.0,
+        200.0
+      ], (function (item) {
+          context.moveTo(item + centerX, centerY);
+          context.arc(centerX, centerY, item, 0.0, Math.PI * 2.0, false);
+          
+        }));
+  Belt_Array.forEach([
+        0.0,
+        30.0,
+        60.0,
+        90.0,
+        120.0,
+        150.0
+      ], (function (item) {
+          var match = toCanvas(toCartesian([
+                    amplitude,
+                    item
+                  ]));
+          var y = match[1];
+          var x = match[0];
+          console.log(x, y);
+          context.moveTo(x, y);
+          context.lineTo(width - x, height - y);
+          
+        }));
   context.closePath();
   context.stroke();
   var getXY = plotAs === /* Polar */0 ? getPolar : getLissajous;

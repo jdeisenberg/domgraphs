@@ -100,13 +100,23 @@ let plot = (formula1: DomGraphs.formula, formula2: DomGraphs.formula,
           
 
         // draw axes
-        C2d.setStrokeStyle(context, String, "#999")
-        C2d.beginPath(context)        
-        C2d.moveTo(context, ~x=0.0, ~y=centerY)
-        C2d.lineTo(context, ~x=width, ~y=centerY)
-        C2d.moveTo(context, ~x=centerX, ~y=0.0)
-        C2d.lineTo(context, ~x=centerX, ~y=height)
-        C2d.closePath(context)
+        C2d.setStrokeStyle(context, String, "#ccc")
+        C2d.beginPath(context)
+         Belt.Array.forEach([50.0, 100.0, 150.0, 200.0],
+            (item) => {C2d.moveTo(context, ~x=item +. centerX, ~y=centerY);
+              C2d.arc(context, ~x=centerX, ~y=centerY,
+              ~r=item, ~startAngle=0.0, ~endAngle=Js.Math._PI *. 2.0, ~anticw=false)});
+          Belt.Array.forEach([0.0, 30.0, 60.0, 90.0, 120.0, 150.0],
+            (item) => {
+              let (x, y) = toCanvas(toCartesian((amplitude, item)));
+              Js.log2(x, y)
+              C2d.moveTo(context, ~x=x, ~y=y);
+              C2d.lineTo(context, ~x=width -. x , ~y=height -. y);
+            });   
+          //C2d.moveTo(context, ~x=centerX, ~y=centerY);
+          //C2d.lineTo(context, ~x=centerX, ~y=centerY);
+          C2d.closePath(context); 
+
         C2d.stroke(context)
         
         // draw the plot lines
